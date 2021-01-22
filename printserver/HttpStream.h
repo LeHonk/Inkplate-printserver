@@ -38,6 +38,7 @@ class HttpStream: public TcpStream {
     void parseNextChunkLength();
   public:
     HttpStream(WiFiClient conn);
+    virtual ~HttpStream();
 
     byte read();
     bool hasMoreData();

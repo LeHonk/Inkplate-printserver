@@ -70,5 +70,6 @@ class IppStream: public HttpStream {
 
   public:
     IppStream(WiFiClient conn);
+    virtual~IppStream(); 
     int parseRequest(Printer** printers, int printerCount);
 };

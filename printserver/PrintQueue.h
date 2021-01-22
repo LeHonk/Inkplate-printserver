@@ -17,7 +17,7 @@
 
 #pragma once
 #include <Arduino.h>
-#include <FS.h>
+#include <SdFat.h>
 #include "Settings.h"
 
 class PrintQueue {
@@ -25,8 +25,8 @@ class PrintQueue {
     static size_t availableFlashSpace;
 
     String printerId;
-    File fileWriters[MAXCLIENTS];
-    File fileReader;
+    SdFile fileWriters[MAXCLIENTS];
+    SdFile fileReader;
     byte head;
     byte tail;
     void saveInfo();

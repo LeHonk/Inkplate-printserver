@@ -15,7 +15,6 @@
     along with printserver-esp8266.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "WiFiManager.h"
 #include "Settings.h"
 #include "HttpStream.h"
 #include "IppStream.h"
@@ -59,6 +58,7 @@ int TcpPrintServer::getFreeClientSlot() {
 }
 
 void TcpPrintServer::processNewSocketClients() {
+  /*
   int freeClientSlot = getFreeClientSlot();
   if (freeClientSlot != -1) {
     WiFiClient newClient = socketServer.available();
@@ -69,6 +69,7 @@ void TcpPrintServer::processNewSocketClients() {
       printers[0]->startJob(freeClientSlot);
     }
   }
+  */
 }
 
 void TcpPrintServer::processNewIppClients() {
@@ -88,6 +89,7 @@ void TcpPrintServer::processNewIppClients() {
 }
 
 void TcpPrintServer::processNewWebClients() {
+  /*
   WiFiClient _httpClient = httpServer.available();
   if (!_httpClient) {
     return;
@@ -130,6 +132,7 @@ void TcpPrintServer::processNewWebClients() {
     newHttpClient.print("HTTP/1.1 404 Not Found \r\n\r\n<h1>Not found</h1>");
   }
   Serial.println("HTTP client handled in " + String(millis() - startTime) + "ms");
+  */
 }
 
 void TcpPrintServer::process() {

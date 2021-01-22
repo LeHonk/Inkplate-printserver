@@ -146,4 +146,3 @@ TcpStream::~TcpStream() {
   Serial.println("Closing connection!");
   tcpConnection.stop();
 }
-

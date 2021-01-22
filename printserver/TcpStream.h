@@ -51,5 +51,5 @@ class TcpStream {
     void print(String s);
     void flushSendBuffer();
 
-    ~TcpStream();
+    virtual ~TcpStream();
 };

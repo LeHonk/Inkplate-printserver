@@ -20,6 +20,9 @@
 HttpStream::HttpStream(WiFiClient conn): TcpStream(conn) {
 }
 
+HttpStream::~HttpStream() {
+}
+
 void HttpStream::parseNextChunkLength() {
   String chunkLength = TcpStream::readStringUntil('\r');
   TcpStream::read(); //consume '\n'

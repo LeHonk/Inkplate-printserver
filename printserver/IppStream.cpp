@@ -15,8 +15,8 @@
     along with printserver-esp8266.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <WiFi.h>
 #include "Settings.h"
-#include "WiFiManager.h"
 #include "IppStream.h"
 
 std::set<String> allPrinterDescriptionAttributes {
@@ -42,6 +42,9 @@ std::set<String> allPrinterDescriptionAttributes {
 };
 
 IppStream::IppStream(WiFiClient conn): HttpStream(conn) {
+}
+
+IppStream::~IppStream() {
 }
 
 std::map<String, std::set<String>> IppStream::parseRequestAttributes() {
@@ -148,7 +151,7 @@ void IppStream::writePrinterAttribute(String name, Printer* printer) {
   } else if (name == "printer-up-time") {
     write4BytesAttribute(IPP_VALUE_TAG_INTEGER, name, millis() / 1000);
   } else if (name == "printer-uri-supported") {
-    writeStringAttribute(IPP_VALUE_TAG_URI, name, "ipp://" + WiFiManager::getIP() + ":" + String(IPP_SERVER_PORT) + "/" + printer->getName());
+    writeStringAttribute(IPP_VALUE_TAG_URI, name, "ipp://inkplate:" + String(IPP_SERVER_PORT) + "/" + printer->getName()); // TODO String format with WiFi.localIP()
   } else if (name == "queued-job-count") {
     write4BytesAttribute(IPP_VALUE_TAG_INTEGER, name, 0);
   } else if (name == "uri-authentication-supported") {

@@ -16,13 +16,14 @@
  */
 
 #include "PrintQueue.h"
+#include <SdFat.h>
+
+static SdFat sd;
 
 size_t PrintQueue::availableFlashSpace = 0;
 
 void PrintQueue::updateAvailableFlashSpace() {
-  FSInfo fsinfo;
-  SPIFFS.info(fsinfo);
-  availableFlashSpace = fsinfo.totalBytes - fsinfo.usedBytes;
+  availableFlashSpace = sd.freeClusterCount() * 512;
 }
 
 PrintQueue::PrintQueue(String _printerId) {
@@ -35,15 +36,15 @@ void PrintQueue::init() {
 }
 
 void PrintQueue::saveInfo() {
-  File infoFile = SPIFFS.open(printerId, "w");
+  SdFile infoFile = SdFile(printerId.c_str(), O_WRITE);
   infoFile.write(head);
   infoFile.write(tail);
   infoFile.close();
 }
 
 void PrintQueue::loadInfo() {
-  if (SPIFFS.exists(printerId)) {
-    File infoFile = SPIFFS.open(printerId, "r");
+  if (sd.exists(printerId.c_str())) {
+    SdFile infoFile = SdFile(printerId.c_str(), O_READ);
     head = infoFile.read();
     tail = infoFile.read();
     infoFile.close();
@@ -55,19 +56,24 @@ void PrintQueue::loadInfo() {
 
 void PrintQueue::startJob(int clientId) {
   head++;
-  fileWriters[clientId] = SPIFFS.open(printerId + String(head), "w");
+  String filename = printerId + String(head);
+  fileWriters[clientId] = SdFile(filename.c_str(), O_WRITE);
   saveInfo();
 }
 
 void PrintQueue::endJob(int clientId, bool cancel) {
-  String fName = fileWriters[clientId].name();
+  char fName[256];
+  fileWriters[clientId].getName(fName, sizeof(fName));
   fileWriters[clientId].close();
   if (cancel) {
-    if(!SPIFFS.remove(fName)) {
-      Serial.println("Warning: failed to remove " + fName);
+    if(!sd.remove(fName)) {
+      Serial.print("Warning: failed to remove ");
+      Serial.println(fName);
     }
   } else {
-    SPIFFS.rename(fName, fName + "OK");
+    char nName[256];
+    sprintf(nName, "%sOK", fName);
+    sd.rename(fName, nName);
   }
 }
 
@@ -81,21 +87,25 @@ void PrintQueue::printByte(int clientId, byte b) {
 }
 
 bool PrintQueue::hasData() {
-  if (fileReader && fileReader.available() > 0) {
+  char fName[256];
+  if (fileReader.isOpen() && fileReader.available() > 0) {
     return true;
   } else {
-    if (fileReader) {
-      String fName = fileReader.name();
+    if (fileReader.isOpen()) {
+      fileReader.getName(fName, sizeof(fName));
       fileReader.close();
-      if(!SPIFFS.remove(fName)) {
-        Serial.println("Warning: failed to remove " + fName);
+      if(!sd.remove(fName)) {
+        Serial.print("Warning: failed to remove ");
+        Serial.println(fName);
       }
     }
-    if (head == tail || SPIFFS.exists(printerId + String(tail + 1))) {
+    sprintf(fName, "%s%d", printerId.c_str(), tail + 1);
+    if (head == tail || sd.exists(fName)) {
       return false;
     } else {
       tail++;
-      fileReader = SPIFFS.open(printerId + String(tail) + "OK", "r");
+      sprintf(fName, "%s%dOK", printerId.c_str(), tail);
+      fileReader.open(fName, O_READ);
       saveInfo();
       return fileReader.available() > 0;
     }
