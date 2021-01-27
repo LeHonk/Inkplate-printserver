@@ -20,7 +20,7 @@
 #include <WiFiClient.h>
 #include <WiFiServer.h>
 #include <SdFat.h>
-//#include <SPIFFS.h>
+#include <ESPmDNS.h>
 
 #include "TcpPrintServer.h"
 #include "PrintQueue.h"
@@ -31,30 +31,6 @@
 Inkplate display(INKPLATE_1BIT);
 
 InkplatePrinter printer("inkplate", &display);
-
-/*#define STROBE 10
-#define BUSY 9
-int DATA[8] = {D0, D1, D2, D3, D4, D5, D6, D7};
-DirectParallelPortPrinter printer("lpt1", DATA, STROBE, BUSY);*/
-
-/*
-#define LPT_DATA   12
-#define LPT_LATCH  13
-#define LPT_CLK    14
-#define LPT_BUSY   15
-#define LPT_STROBE 32
-ShiftRegParallelPortPrinter printer1("parallel", LPT_DATA, LPT_CLK, LPT_LATCH, LPT_STROBE, LPT_BUSY);
-*/
-
-/*
-#define CH375_TX D3
-#define CH375_RX D6
-#define CH375_INT D4
-SoftwareSerial ch375swSer(CH375_RX, CH375_TX, false, 32);
-USBPortPrinter printer1("usb", ch375swSer, CH375_INT);
-*/
-
-//SerialPortPrinter printer2("serial", &Serial);
 
 Printer* printers[] = {&printer};
 
@@ -73,6 +49,25 @@ void setup() {
     printers[i]->init();
   }
   Serial.println("initialized printers");
+
+  // Set up mDNS responder
+  if (!MDNS.begin("Inkplate6")) {
+    Serial.println("Error setting up MDNS responder!");
+    while(1) {
+      delay(1000);
+    }
+  }
+  Serial.println("mDNS responder started");
+
+  MDNS.addService("_ipp", "_tcp", IPP_SERVER_PORT);
+  MDNS.addServiceTxt("_ipp","_tcp", "PaperMax", "<legal-A4");
+  MDNS.addServiceTxt("_ipp","_tcp", "UUID", "3bdaf54c-5d6c-11eb-8b82-0026bb64bada");
+  MDNS.addServiceTxt("_ipp","_tcp", "note", "basement"); // Placement
+  MDNS.addServiceTxt("_ipp","_tcp", "pdl", "text/plain");
+  MDNS.addServiceTxt("_ipp","_tcp", "rp", "inkplate");  // TODO One per printer?
+  MDNS.addServiceTxt("_ipp","_tcp", "qtotal", "1");
+  MDNS.addServiceTxt("_ipp","_tcp", "txtVers", "1");
+  //MDNS.setInstanceName("_print._sub");
 
   server.start();
 
