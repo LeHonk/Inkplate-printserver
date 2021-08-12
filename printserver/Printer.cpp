@@ -19,6 +19,8 @@
 
 Printer::Printer(String _printerId): queue(_printerId) {
   name = _printerId;
+  time(&configChangeTime);
+  time(&stateChangeTime);
 }
 
 void Printer::init() {
@@ -34,6 +36,7 @@ void Printer::endJob() {
 void Printer::startJob(int clientId) {
   if (status == IDLE) {
     status = PRINTING_FROM_SERVER;
+    time(&stateChangeTime);
     printingClientId = clientId;
     startJob();
   } else {
@@ -44,6 +47,7 @@ void Printer::startJob(int clientId) {
 void Printer::endJob(int clientId, bool cancel) {
   if (status == PRINTING_FROM_SERVER && printingClientId == clientId) {
     status = IDLE;
+    time(&stateChangeTime);
     endJob();
   } else {
     queue.endJob(clientId, cancel);
@@ -74,12 +78,34 @@ void Printer::processQueue() {
       }
     } else {
       status = IDLE;
+      time(&stateChangeTime);
     }
   } else if (status == IDLE && queue.hasData()) {
     status = PRINTING_FROM_QUEUE;
+    time(&stateChangeTime);
   }
 }
 
 String Printer::getName() {
   return name;
+}
+
+String Printer::getLocation() {
+  return location;
+}
+
+String Printer::getOrganization() {
+  return organization;
+}
+
+String Printer::getUnit() {
+  return unit;
+}
+
+time_t Printer::getStateChangeTime() {
+  return stateChangeTime;
+}
+
+time_t Printer::getConfigChangeTime() {
+  return configChangeTime;
 }

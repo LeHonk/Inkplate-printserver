@@ -153,5 +153,5 @@ void TcpPrintServer::printInfo() {
       usedSlots++;
     }
   }
-  Serial.printf("Server slots: %d/%d\n", usedSlots, MAXCLIENTS);
+  Serial.printf("%d\n", usedSlots);
 }

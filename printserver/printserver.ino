@@ -63,11 +63,12 @@ void setup() {
   MDNS.addServiceTxt("_ipp","_tcp", "PaperMax", "<legal-A4");
   MDNS.addServiceTxt("_ipp","_tcp", "UUID", "3bdaf54c-5d6c-11eb-8b82-0026bb64bada");
   MDNS.addServiceTxt("_ipp","_tcp", "note", "basement"); // Placement
-  MDNS.addServiceTxt("_ipp","_tcp", "pdl", "text/plain");
+  MDNS.addServiceTxt("_ipp","_tcp", "pdl", "text/plain,image/pwg-raster,image/jpeg");
   MDNS.addServiceTxt("_ipp","_tcp", "rp", "inkplate");  // TODO One per printer?
+  MDNS.addServiceTxt("_ipp","_tcp", "adminurl", "http://inkplate.local/admin/");
   MDNS.addServiceTxt("_ipp","_tcp", "qtotal", "1");
-  MDNS.addServiceTxt("_ipp","_tcp", "txtVers", "1");
-  //MDNS.setInstanceName("_print._sub");
+  MDNS.addServiceTxt("_ipp","_tcp", "txtvers", "1");
+  //MDNS.addPTRrecord("_print._sub");
 
   server.start();
 
@@ -79,6 +80,7 @@ void setup() {
   display.setTextWrap(true);
   
   Serial.println("setup ok");
+  //Serial.println("Heap\tSlots");
 }
 
 void loop() {
@@ -92,8 +94,8 @@ void loop() {
 inline void printDebugAndYield() {
   static unsigned long lastCall = 0;
   if (millis() - lastCall > 5000) {
-    Serial.printf("Free heap: %d bytes\r\n", ESP.getFreeHeap());
-    server.printInfo();
+    //Serial.printf("%d\t", ESP.getFreeHeap());
+    //server.printInfo();
     //Serial.printf("[Filesystem] Total bytes: %d, Used bytes: %d\r\n", SPIFFS.totalBytes(), SPIFFS.usedBytes());
 
     PrintQueue::updateAvailableFlashSpace();

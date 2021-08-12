@@ -28,9 +28,15 @@ typedef enum {
 class Printer {
   private:
     printer_status status = IDLE;
+    time_t stateChangeTime;
     int printingClientId = 0;
     PrintQueue queue;
     String name;
+    String location = "";
+    String organization = "";
+    String unit = "";
+    time_t configChangeTime;
+
   protected:
     Printer(String _printerId);
     // startJob() and endJob() do nothing by default, and can be overriden if a specifica
@@ -47,5 +53,10 @@ class Printer {
     void printByte(int clientId, byte b);
     void processQueue();
     String getName();
+    String getLocation();
+    String getOrganization();
+    String getUnit();
+    time_t getConfigChangeTime();
+    time_t getStateChangeTime();
     virtual String getInfo() = 0;
 };
