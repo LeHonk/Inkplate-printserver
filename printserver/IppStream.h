@@ -44,6 +44,9 @@
 #define IPP_VALUE_TAG_ENUM 0x23
 #define IPP_VALUE_TAG_DATETIME 0x31
 #define IPP_VALUE_TAG_RESOLUTION 0x32
+#define IPP_VALUE_TAG_RANGE_OF_INTEGERS 0x33
+#define IPP_VALUE_TAG_BEGIN_COLLECTION 0x34
+#define IPP_VALUE_TAG_END_COLLECTION 0x37
 #define IPP_VALUE_TAG_TEXT 0x41
 #define IPP_VALUE_TAG_NAME 0x42
 #define IPP_VALUE_TAG_KEYWORD 0x44
@@ -51,6 +54,7 @@
 #define IPP_VALUE_TAG_CHARSET 0x47
 #define IPP_VALUE_TAG_NATURAL_LANGUAGE 0x48
 #define IPP_VALUE_TAG_MIME_MEDIA_TYPE 0x49
+#define IPP_VALUE_TAG_MEMBER_NAME 0x4A
 
 // IPP Operations
 #define IPP_PRINT_JOB               0x0002
@@ -65,19 +69,31 @@
 #define IPP_CLOSE_JOB               0x003B
 #define IPP_IDENTIFY_PRINTER        0x003C
 
+// IPP Orientations
+#define IPP_ORIENTATION_PORTRAIT      0x0003
+#define IPP_ORIENTATION_LANDSCAPE     0x0004
+#define IPP_ORIENTATION_REV_LANDSCAPE 0x0005
+#define IPP_ORIENTATION_REV_PORTRAIT  0x0006
+
+// IPP Print Qualities
+#define IPP_PRINT_QUALITY_DRAFT     0x0003
+#define IPP_PRINT_QUALITY_NORMAL    0x0004
+#define IPP_PRINT_QUALITY_HIGH      0x0005
+
 class IppStream: public HttpStream {
   private:
     std::map<String, std::set<String>> parseRequestAttributes();
     void beginResponse(uint16_t statusCode, uint32_t requestId, String charset);
 
     void writeStringAttribute(byte valueTag, String name, String value);
-    void writeOOBAttribute(byte valueTag, String name);
+    void write0BytesAttribute(byte valueTag, String name);
     void writeByteAttribute(byte valueTag, String name, byte value);
     void write2BytesAttribute(byte valueTag, String name, uint16_t value);
     void write4BytesAttribute(byte valueTag, String name, uint32_t value);
     void writeNBytesAttribute(byte valueTag, String name, uint16_t n, const char *value);
     void writeDateTimeAttribute(byte valueTag, String name, struct tm* t, long tz);
     void writeResolutionAttribute(byte valueTag, String name, int32_t x, int32_t y, uint8_t unit);
+    void writeRangeAttribute(byte valueTag, String name, int32_t low, int32_t high);
 
     void writePrinterAttribute(String name, Printer* printer);
     void handleGetPrinterAttributesRequest(std::map<String, std::set<String>> requestAttributes, Printer* printer);

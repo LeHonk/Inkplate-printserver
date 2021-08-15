@@ -37,14 +37,31 @@ std::set<String> allPrinterDescriptionAttributes {
   "ipp-versions-supported",
   "job-creation-attributes-supported",
   "job-ids-supported",
+  "media-bottom-margin-supported",
+  "media-right-margin-supported",
+  "media-left-margin-supported",
+  "media-top-margin-supported",
+  "media-col-supported",
+  "media-default",
+  "media-ready",
+  "media-size-supported",
+  "media-supported",
   "multiple-document-jobs-supported",
   "multiple-operation-time-out",
   "multiple-operation-time-out-action",
   "natural-language-configured",
   "operations-supported",
+  "orientation-requested-default",
+  "orientation-requested-supported",
+  "output-bin-default",
+  "output-bin-supported",
   "pages-per-minute",
   "pdl-override-supported",
   "preferred-attributes-supported",
+  "print-color-mode-default",
+  "print-color-mode-supported",
+  "print-quality-default",
+  "print-quality-supported",
   "printer-config-change-date-time",
   "printer-config-change-time",
   "printer-current-time",
@@ -57,6 +74,10 @@ std::set<String> allPrinterDescriptionAttributes {
   "printer-more-info",
   "printer-organization",
   "printer-organizational-unit",
+  "printer-quality-default",
+  "printer-quality-supported",
+  "printer-resolution-default",
+  "printer-resolution-supported",
   "printer-state-change-date-time",
   "printer-state-change-time",
   "printer-state-message",
@@ -71,6 +92,8 @@ std::set<String> allPrinterDescriptionAttributes {
   "pwg-raster-document-resolution-supported",
   "pwg-raster-document-type-supported",
   "queued-job-count",
+  "sides-default",
+  "sides-supported",
   "uri-authentication-supported",
   "uri-security-supported",
   "which-jobs-supported"
@@ -125,7 +148,7 @@ void IppStream::writeStringAttribute(byte valueTag, String name, String value) {
   print(value);
 }
 
-void IppStream::writeOOBAttribute(byte valueTag, String name) {
+void IppStream::write0BytesAttribute(byte valueTag, String name) {
   write(valueTag);
   write2Bytes((uint16_t) name.length());
   print(name);
@@ -199,9 +222,18 @@ void IppStream::writeResolutionAttribute(byte valueTag, String name, int32_t x, 
   write2Bytes((uint16_t) name.length());
   print(name);
   write2Bytes(9);
-  write4Bytes(x);
-  write4Bytes(y);
+  write4Bytes((uint32_t)x);
+  write4Bytes((uint32_t)y);
   write(unit);
+}
+
+void IppStream::writeRangeAttribute(byte valueTag, String name, int32_t low, int32_t high) {
+  write(valueTag);
+  write2Bytes((uint16_t) name.length());
+  print(name);
+  write2Bytes(8);
+  write4Bytes(low);
+  write4Bytes(high);
 }
 
 void IppStream::writePrinterAttribute(String name, Printer* printer) {
@@ -214,7 +246,7 @@ void IppStream::writePrinterAttribute(String name, Printer* printer) {
   } else if (name == "copies-default") {
     write4BytesAttribute(IPP_VALUE_TAG_INTEGER, name, 1);
   } else if (name == "copies-supported") {
-    write4BytesAttribute(IPP_VALUE_TAG_INTEGER, name, 1);
+    writeRangeAttribute(IPP_VALUE_TAG_RANGE_OF_INTEGERS, name, 1, 1);
   } else if (name == "document-format-default") {
     writeStringAttribute(IPP_VALUE_TAG_MIME_MEDIA_TYPE, name, "text/plain");
   } else if (name == "document-format-supported") {
@@ -235,6 +267,29 @@ void IppStream::writePrinterAttribute(String name, Printer* printer) {
     writeStringAttribute(IPP_VALUE_TAG_KEYWORD, name, "media");
   } else if (name == "job-ids-supported") {
     writeByteAttribute(IPP_VALUE_TAG_BOOLEAN, name, 1);
+  } else if (name == "media-bottom-margin-supported") {
+    write4BytesAttribute(IPP_VALUE_TAG_INTEGER, name, 300);
+  } else if (name == "media-right-margin-supported") {
+    write4BytesAttribute(IPP_VALUE_TAG_INTEGER, name, 300);
+  } else if (name == "media-left-margin-supported") {
+    write4BytesAttribute(IPP_VALUE_TAG_INTEGER, name, 300);
+  } else if (name == "media-col-supported") {
+    writeStringAttribute(IPP_VALUE_TAG_KEYWORD, name, "media-size");
+  } else if (name == "media-top-margin-supported") {
+    write4BytesAttribute(IPP_VALUE_TAG_INTEGER, name, 300);
+  } else if (name == "media-default") {
+    writeStringAttribute(IPP_VALUE_TAG_NAME, name, "custom_display_91.4x121.9mm");
+  } else if (name == "media-ready") {
+    writeStringAttribute(IPP_VALUE_TAG_NAME, name, "custom_display_91.4x121.9mm");
+  } else if (name == "media-size-supported") {
+    write0BytesAttribute(IPP_VALUE_TAG_BEGIN_COLLECTION, name);
+    writeStringAttribute(IPP_VALUE_TAG_MEMBER_NAME, "", "x-dimension");
+    write4BytesAttribute(IPP_VALUE_TAG_INTEGER, "", 9060);
+    writeStringAttribute(IPP_VALUE_TAG_MEMBER_NAME, "", "y-dimension");
+    write4BytesAttribute(IPP_VALUE_TAG_INTEGER, "", 12240);
+    write0BytesAttribute(IPP_VALUE_TAG_END_COLLECTION, "");
+  } else if (name == "media-supported") {
+    writeStringAttribute(IPP_VALUE_TAG_NAME, name, "custom_display_91.4x121.9mm");
   } else if (name == "multiple-document-jobs-supported") {
     writeByteAttribute(IPP_VALUE_TAG_BOOLEAN, name, 0);
   } else if (name == "multiple-operation-time-out") {
@@ -255,6 +310,17 @@ void IppStream::writePrinterAttribute(String name, Printer* printer) {
     write4BytesAttribute(IPP_VALUE_TAG_ENUM, "", IPP_CANCEL_MY_JOBS);
     write4BytesAttribute(IPP_VALUE_TAG_ENUM, "", IPP_CLOSE_JOB);
     write4BytesAttribute(IPP_VALUE_TAG_ENUM, "", IPP_IDENTIFY_PRINTER);
+  } else if (name == "orientation-requested-default") {
+    write4BytesAttribute(IPP_VALUE_TAG_ENUM, name, IPP_ORIENTATION_PORTRAIT);
+  } else if (name == "orientation-requested-supported") {
+    write4BytesAttribute(IPP_VALUE_TAG_ENUM, name, IPP_ORIENTATION_PORTRAIT);
+    write4BytesAttribute(IPP_VALUE_TAG_ENUM, "", IPP_ORIENTATION_LANDSCAPE);
+    write4BytesAttribute(IPP_VALUE_TAG_ENUM, "", IPP_ORIENTATION_REV_LANDSCAPE);
+    write4BytesAttribute(IPP_VALUE_TAG_ENUM, "", IPP_ORIENTATION_REV_PORTRAIT);
+  } else if (name == "output-bin-default") {
+    writeStringAttribute(IPP_VALUE_TAG_NAME, name, "Display");
+  } else if (name == "output-bin-supported") {
+    writeStringAttribute(IPP_VALUE_TAG_NAME, name, "Display");
   } else if (name == "pages-per-minute") {
     write4BytesAttribute(IPP_VALUE_TAG_INTEGER, name, 1);               // TODO correct this value
   } else if (name == "pdl-override-supported") {
@@ -263,6 +329,15 @@ void IppStream::writePrinterAttribute(String name, Printer* printer) {
     writeStringAttribute(IPP_VALUE_TAG_ */
   } else if (name == "preferred-attributes-supported") {
     writeByteAttribute(IPP_VALUE_TAG_BOOLEAN, name, 0);
+  } else if (name == "print-color-mode-default") {
+    writeStringAttribute(IPP_VALUE_TAG_KEYWORD, name, "monochrome");
+  } else if (name == "print-color-mode-supported") {
+    writeStringAttribute(IPP_VALUE_TAG_KEYWORD, name, "auto");
+    writeStringAttribute(IPP_VALUE_TAG_KEYWORD, "", "monochrome");
+  } else if (name == "print-quality-default") {
+    write4BytesAttribute(IPP_VALUE_TAG_ENUM, name, IPP_PRINT_QUALITY_NORMAL);
+  } else if (name == "print-quality-supported") {
+    write4BytesAttribute(IPP_VALUE_TAG_ENUM, name, IPP_PRINT_QUALITY_NORMAL);
   } else if (name == "printer-config-change-date-time") {
     writeNBytesAttribute(IPP_VALUE_TAG_DATETIME, name, 11, "\x07\xe5\x05\x1a\x13\x00\x32\x3+\x02\x00"); // 2021-05-26 19:00:50.3+0200
   } else if (name == "printer-config-change-time") {
@@ -272,7 +347,7 @@ void IppStream::writePrinterAttribute(String name, Printer* printer) {
     time(&now);
     writeDateTimeAttribute(IPP_VALUE_TAG_DATETIME, name, localtime(&now), _timezone);
   } else if (name == "printer-geo-location") {
-    writeOOBAttribute(IPP_VALUE_TAG_UNKNOWN, name);
+    write0BytesAttribute(IPP_VALUE_TAG_UNKNOWN, name);
   } else if (name == "printer-get-attributes-supported") {
     writeStringAttribute(IPP_VALUE_TAG_KEYWORD, name, "document-format");
   } else if (name == "printer-icons") {
@@ -299,6 +374,10 @@ void IppStream::writePrinterAttribute(String name, Printer* printer) {
     write4BytesAttribute(IPP_VALUE_TAG_INTEGER, name, now);
   } else if (name == "printer-state-message") {
     writeStringAttribute(IPP_VALUE_TAG_TEXT, name, "Ready"); // TODO Are we ready, really?
+  } else if (name == "printer-resolution-default") {
+    writeResolutionAttribute(IPP_VALUE_TAG_RESOLUTION, name, 167, 167, 3);
+  } else if (name == "printer-resolution-supported") {
+    writeResolutionAttribute(IPP_VALUE_TAG_RESOLUTION, name, 167, 167, 3);
   } else if (name == "printer-uuid") {
     writeStringAttribute(IPP_VALUE_TAG_URI, name, "urn:uuid:FCE0B1BE-65B2-41D8-98E2-F020D6831DF7");
   } else if (name == "printer-name") {
@@ -317,7 +396,11 @@ void IppStream::writePrinterAttribute(String name, Printer* printer) {
     writeResolutionAttribute(IPP_VALUE_TAG_RESOLUTION, name, 167, 167, 3); // 167 x 167 dots per inch
   } else if (name == "pwg-raster-document-type-supported") {
     writeStringAttribute(IPP_VALUE_TAG_KEYWORD, name, "black_1");
-  }else if (name == "queued-job-count") {
+  } else if (name == "sides-default") {
+    writeStringAttribute(IPP_VALUE_TAG_KEYWORD, name, "one-sided");
+  } else if (name == "sides-supported") {
+    writeStringAttribute(IPP_VALUE_TAG_KEYWORD, name, "one-sided");
+  } else if (name == "queued-job-count") {
     write4BytesAttribute(IPP_VALUE_TAG_INTEGER, name, 0);
   } else if (name == "uri-authentication-supported") {
     writeStringAttribute(IPP_VALUE_TAG_KEYWORD, name, "none");
@@ -328,6 +411,8 @@ void IppStream::writePrinterAttribute(String name, Printer* printer) {
   } else if (name == "which-jobs-supported") {
     writeStringAttribute(IPP_VALUE_TAG_KEYWORD, name, "completed");
     writeStringAttribute(IPP_VALUE_TAG_KEYWORD, "", "not-completed");
+  } else {
+    Serial.printf("Unknown attribute requested %s\n", name);
   }
 }
 
@@ -352,7 +437,7 @@ int IppStream::parseRequest(Printer** printers, int printerCount) {
   }
 
   if (getRequestMethod() == "GET") {
-    if (getRequestPath() == "icon.png") {
+    if (getRequestPath() == "/icon.png") {
       print("HTTP/1.1 200 OK\r\n\r\n");
       print("Content-Type: image/png\r\n");
       print("Content-Length: " + String(inkplate6_png_len) + "\r\n");
@@ -361,9 +446,12 @@ int IppStream::parseRequest(Printer** printers, int printerCount) {
         write(inkplate6_png[i]);
       }
       return -1;
-    } else if (getRequestPath() == "info.html") {
+    } else if (getRequestPath() == "/info.html") {
       print("HTTP/1.1 301 Moved permanently\r\n");
       print("Location: https://e-radionica.com/en/inkplate-6.html\r\n");
+      return -1;
+    } else {
+      print("HTTP/1.1 404 Not Found\r\n");
       return -1;
     }
   }
