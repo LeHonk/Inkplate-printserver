@@ -41,6 +41,9 @@ std::set<String> allPrinterDescriptionAttributes {
   "media-right-margin-supported",
   "media-left-margin-supported",
   "media-top-margin-supported",
+  "media-col",
+  "media-col-default",
+  "media-col-ready",
   "media-col-supported",
   "media-default",
   "media-ready",
@@ -97,6 +100,32 @@ std::set<String> allPrinterDescriptionAttributes {
   "uri-authentication-supported",
   "uri-security-supported",
   "which-jobs-supported"
+};
+
+std::set<String> jobTemplate {
+  "copies-default",
+  "copies-supported",
+  "media-bottom-margin-supported",
+  "media-col-default",
+  "media-col-ready",
+  "media-col-supported",
+  "media-default",
+  "media-left-margin-supported",
+  "media-ready",
+  "media-right-margin-supported",
+  "media-size-supported",
+  "media-supported",
+  "media-top-margin-supported",
+  "orientation-requested-default",
+  "orientation-requested-supported",
+  "output-bin-default",
+  "output-bin-supported",
+  "print-color-mode-default",
+  "print-color-mode-supported",
+  "print-quality-default",
+  "print-quality-supported",
+  "printer-resolution-default",
+  "printer-resolution-supported",
 };
 
 IppStream::IppStream(WiFiClient conn): HttpStream(conn) {
@@ -273,6 +302,28 @@ void IppStream::writePrinterAttribute(String name, Printer* printer) {
     write4BytesAttribute(IPP_VALUE_TAG_INTEGER, name, 300);
   } else if (name == "media-left-margin-supported") {
     write4BytesAttribute(IPP_VALUE_TAG_INTEGER, name, 300);
+  } else if (name == "media-col" || name == "media-col-ready" || name == "media-col-default" || name == "media-col-database") {
+    write0BytesAttribute(IPP_VALUE_TAG_BEGIN_COLLECTION, name);
+    writeStringAttribute(IPP_VALUE_TAG_MEMBER_NAME, "", "media-bottom-margin");
+    write4BytesAttribute(IPP_VALUE_TAG_INTEGER, "", 300);
+    writeStringAttribute(IPP_VALUE_TAG_MEMBER_NAME, "", "media-left-margin");
+    write4BytesAttribute(IPP_VALUE_TAG_INTEGER, "", 300);
+    writeStringAttribute(IPP_VALUE_TAG_MEMBER_NAME, "", "media-right-margin");
+    write4BytesAttribute(IPP_VALUE_TAG_INTEGER, "", 300);
+    writeStringAttribute(IPP_VALUE_TAG_MEMBER_NAME, "", "media-top-margin");
+    write4BytesAttribute(IPP_VALUE_TAG_INTEGER, "", 300);
+    writeStringAttribute(IPP_VALUE_TAG_MEMBER_NAME, "", "media-size");
+    write0BytesAttribute(IPP_VALUE_TAG_BEGIN_COLLECTION, "");
+    writeStringAttribute(IPP_VALUE_TAG_MEMBER_NAME, "", "x-dimension");
+    write4BytesAttribute(IPP_VALUE_TAG_INTEGER, "", 9141);
+    writeStringAttribute(IPP_VALUE_TAG_MEMBER_NAME, "", "y-dimension");
+    write4BytesAttribute(IPP_VALUE_TAG_INTEGER, "", 12190);
+    write0BytesAttribute(IPP_VALUE_TAG_END_COLLECTION, "");
+    writeStringAttribute(IPP_VALUE_TAG_MEMBER_NAME, "", "media-source");
+    writeStringAttribute(IPP_VALUE_TAG_KEYWORD, "", "auto");
+    writeStringAttribute(IPP_VALUE_TAG_MEMBER_NAME, "", "media-type");
+    writeStringAttribute(IPP_VALUE_TAG_KEYWORD, "", "other");
+    write0BytesAttribute(IPP_VALUE_TAG_END_COLLECTION, "");
   } else if (name == "media-col-supported") {
     writeStringAttribute(IPP_VALUE_TAG_KEYWORD, name, "media-size");
   } else if (name == "media-top-margin-supported") {
@@ -420,7 +471,11 @@ void IppStream::handleGetPrinterAttributesRequest(std::map<String, std::set<Stri
   std::set<String>& requestedAttributes = requestAttributes["requested-attributes"];
 
   if (requestedAttributes.size() == 0 || (requestedAttributes.find("all") != requestedAttributes.end()) || (requestedAttributes.find("printer-description") != requestedAttributes.end())) {
-    requestedAttributes = allPrinterDescriptionAttributes;
+    requestedAttributes.insert(allPrinterDescriptionAttributes.begin(), allPrinterDescriptionAttributes.end());
+  }
+
+  if (requestedAttributes.find("job-template") != requestedAttributes.end()) {
+    requestedAttributes.insert(jobTemplate.begin(), jobTemplate.end());
   }
 
   write(IPP_PRINTER_ATTRIBUTES_TAG);
@@ -451,6 +506,7 @@ int IppStream::parseRequest(Printer** printers, int printerCount) {
       print("Location: https://e-radionica.com/en/inkplate-6.html\r\n");
       return -1;
     } else {
+      Serial.printf("404 %s\n", getRequestPath());
       print("HTTP/1.1 404 Not Found\r\n");
       return -1;
     }
